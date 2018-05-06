@@ -13,9 +13,9 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        EditText edNameFontSize = (EditText) findViewById(R.id.edNameFontSize);
-        EditText edDateFontSize = (EditText) findViewById(R.id.edDateFontSize);
-        EditText edPhoneFontSize = (EditText) findViewById(R.id.edPhoneFontSize);
+        EditText edNameFontSize = findViewById(R.id.edNameFontSize);
+        EditText edDateFontSize = findViewById(R.id.edDateFontSize);
+        EditText edPhoneFontSize = findViewById(R.id.edPhoneFontSize);
 
         Intent intent = getIntent(); // gets the previously created intent
 
@@ -25,9 +25,9 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public void btnOKClick(View view) {
-        EditText edNameFontSize = (EditText) findViewById(R.id.edNameFontSize);
-        EditText edDateFontSize = (EditText) findViewById(R.id.edDateFontSize);
-        EditText edPhoneFontSize = (EditText) findViewById(R.id.edPhoneFontSize);
+        EditText edNameFontSize = findViewById(R.id.edNameFontSize);
+        EditText edDateFontSize = findViewById(R.id.edDateFontSize);
+        EditText edPhoneFontSize = findViewById(R.id.edPhoneFontSize);
 
         Intent intent = new Intent();
         intent.putExtra(ContactActivity.strFSName, edNameFontSize.getText().toString());
