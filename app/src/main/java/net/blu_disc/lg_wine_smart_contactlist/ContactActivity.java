@@ -1,16 +1,22 @@
 package net.blu_disc.lg_wine_smart_contactlist;
 
 import android.Manifest;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.provider.BaseColumns;
 import android.provider.CallLog;
 import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -20,19 +26,98 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 public class ContactActivity extends AppCompatActivity {
+    public final static String strFSName = "fontsizeName";
+    public final static String strFSDate = "fontsizeDate";
+    public final static String strFSPhone = "fontsizePhone";
+    public final static int iFSName = 22;
+    public final static int iFSDate = 14;
+    public final static int iFSPhone = 16;
+
     private ListView listContacts;
     private String sFilter = "*";
     private String sCaption = "";
+
+    private float fontsizeName = iFSName;
+    private float fontsizeDate = iFSDate;
+    private float fontsizePhone = iFSPhone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact);
 
+        loadOptions();
+
         listContacts = findViewById(R.id.conactlist);
         loadContactsFromLog();
 
-        listContacts.setOnKeyListener(new ContactsViewKeyListener() );
+        listContacts.setOnKeyListener(new ContactsViewKeyListener());
+    }
+
+    private void loadOptions() {
+        SharedPreferences sPref = getPreferences(MODE_PRIVATE);
+        fontsizeName = Float.valueOf(sPref.getString(strFSName, Integer.toString(iFSName)));
+        fontsizeDate = Float.valueOf(sPref.getString(strFSDate, Integer.toString(iFSDate)));
+        fontsizePhone = Float.valueOf(sPref.getString(strFSPhone, Integer.toString(iFSPhone)));
+    }
+
+    private void saveOptions() {
+        SharedPreferences sPref = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor ed = sPref.edit();
+        ed.putString(strFSName, Float.toString(fontsizeName));
+        ed.putString(strFSDate, Float.toString(fontsizeDate));
+        ed.putString(strFSPhone, Float.toString(fontsizePhone));
+        ed.apply();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, 1, 0, "Settings");
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    private float checkFontSize(float fontsize) {
+        if (fontsize < 10) fontsize = 10;
+        if (fontsize > 50) fontsize = 50;
+        return fontsize;
+    }
+
+    protected void onActivityResult (int requestCode, int resultCode, Intent data) {
+        if (resultCode != RESULT_OK) return;
+
+        fontsizeName = checkFontSize(Float.valueOf(data.getStringExtra(strFSName)));
+        fontsizeDate = checkFontSize(Float.valueOf(data.getStringExtra(strFSDate)));
+        fontsizePhone = checkFontSize(Float.valueOf(data.getStringExtra(strFSPhone)));
+
+        saveOptions();
+
+        reloadData();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        intent.putExtra(strFSName, fontsizeName);
+        intent.putExtra(strFSDate, fontsizeDate);
+        intent.putExtra(strFSPhone, fontsizePhone);
+        startActivityForResult(intent, 1);
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void reloadData() {
+        if (sFilter.length() > 1)
+            loadContactsFromContacts();
+        else
+            loadContactsFromLog();
+
+        if (listContacts.getCount() == 0 && sFilter.length() > 1) {
+            removeLastFilter();
+            if (sFilter.length() > 1)
+                loadContactsFromContacts();
+            else
+                loadContactsFromLog();
+        }
     }
 
     private void loadContactsFromLog() {
@@ -131,8 +216,20 @@ public class ContactActivity extends AppCompatActivity {
             }
         } while (cursor.moveToNext());
 
-        ListAdapter adapter = new ContactsArrayAdapter(this, R.layout.item, arrayLog);
+        ListAdapter adapter = new ContactsArrayAdapter(this, R.layout.item, arrayLog, fontsizeName, fontsizeDate, fontsizePhone);
         listContacts.setAdapter(adapter);
+    }
+
+    private void removeLastFilter() {
+        int iBracket = sFilter.lastIndexOf('[');
+        int iOne = sFilter.lastIndexOf('1');
+        if ((iOne > -1) && (iBracket > iOne))
+            iBracket = iOne;
+        if (iBracket == -1)
+            iBracket = 1;
+        sFilter = sFilter.substring(0, iBracket);
+        if (sCaption.length() > 0)
+            sCaption = sCaption.substring(0, sCaption.length() - 1);
     }
 
     private class ContactsViewKeyListener implements View.OnKeyListener {
@@ -142,38 +239,36 @@ public class ContactActivity extends AppCompatActivity {
             if (keyCode == KeyEvent.KEYCODE_DEL)
                 return true;
 
-            if (keyEvent.getAction() == KeyEvent.ACTION_UP) {
-                if (keyEvent.getKeyCode() == KeyEvent.KEYCODE_CALL) {
+            //int eventKeyCode = keyEvent.getKeyCode();
+            int keyAction = keyEvent.getAction();
+            int scanCode = keyEvent.getScanCode();
+
+            if (keyAction == KeyEvent.ACTION_UP) {
+                if (keyCode == KeyEvent.KEYCODE_CALL) {
                     if (listContacts.getSelectedView() != null) {
                         makeCall();
                         return true;
                     }
                 } else
-                    return (keyEvent.getScanCode() == KEY_DELETE);
+                if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+                    if (listContacts.getSelectedView() != null) {
+                        openContact();
+                        return true;
+                    }
+                } else
+                    return (scanCode == KEY_DELETE);
             }
 
             Boolean needReload = updateFilterFromKeyCode(keyCode);
 
-            if (keyEvent.getScanCode() == KEY_DELETE) {
+            if (scanCode == KEY_DELETE) {
                 if (sFilter.length() > 1)
                     removeLastFilter();
                 needReload = true;
             }
 
             if (needReload) {
-                if (sFilter.length() > 1)
-                    loadContactsFromContacts();
-                else
-                    loadContactsFromLog();
-
-                if (listContacts.getCount() == 0 && sFilter.length() > 1) {
-                    removeLastFilter();
-                    if (sFilter.length() > 1)
-                        loadContactsFromContacts();
-                    else
-                        loadContactsFromLog();
-                }
-
+                reloadData();
                 return true;
             }
 
@@ -228,18 +323,6 @@ public class ContactActivity extends AppCompatActivity {
             return true;
         }
 
-        private void removeLastFilter() {
-            int iBracket = sFilter.lastIndexOf('[');
-            int iOne = sFilter.lastIndexOf('1');
-            if ((iOne > -1) && (iBracket > iOne))
-                iBracket = iOne;
-            if (iBracket == -1)
-                iBracket = 1;
-            sFilter = sFilter.substring(0, iBracket);
-            if (sCaption.length() > 0)
-                sCaption = sCaption.substring(0, sCaption.length() - 1);
-        }
-
         private void makeCall() {
             TextView vPhone = listContacts.getSelectedView().findViewById(R.id.tvPhone);
             if (ActivityCompat.checkSelfPermission(listContacts.getContext(), Manifest.permission.CALL_PHONE) ==
@@ -248,6 +331,32 @@ public class ContactActivity extends AppCompatActivity {
                 startActivity(intent);
             }
             finishAffinity();
+        }
+
+        private void openContact() {
+            String sPhone = ((TextView)listContacts.getSelectedView().findViewById(R.id.tvPhone)).getText().toString();
+            Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(sPhone));
+            ContentResolver contentResolver = getContentResolver();
+            String[] projection = new String[] { ContactsContract.PhoneLookup._ID };
+
+            Cursor cursor = contentResolver.query(uri, projection, null, null, null);
+
+            int contactId = -1;
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    contactId = cursor.getInt(cursor.getColumnIndexOrThrow(ContactsContract.PhoneLookup._ID));
+                }
+                cursor.close();
+            }
+
+            if (contactId > -1) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                Uri contactUri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId);
+                intent.setData(contactUri);
+                startActivity(intent);
+            }
+
+            //finishAffinity();
         }
     }
 }

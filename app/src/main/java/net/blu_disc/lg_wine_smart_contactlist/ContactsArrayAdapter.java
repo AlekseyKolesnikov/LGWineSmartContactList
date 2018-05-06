@@ -16,10 +16,17 @@ import java.util.Locale;
 
 class ContactsArrayAdapter extends ArrayAdapter<ContactsData> {
     private Activity activity = null;
+    private float fontsizeName = 22;
+    private float fontsizeDate = 14;
+    private float fontsizePhone = 16;
 
-    ContactsArrayAdapter(@NonNull Activity activity, @LayoutRes int resource, @NonNull List<ContactsData> objects) {
+    ContactsArrayAdapter(@NonNull Activity activity, @LayoutRes int resource, @NonNull List<ContactsData> objects,
+                         float fsName, float fsDate, float fsPhone) {
         super(activity, resource, objects);
         this.activity = activity;
+        this.fontsizeName = fsName;
+        this.fontsizeDate = fsDate;
+        this.fontsizePhone = fsPhone;
     }
 
     @NonNull
@@ -37,6 +44,14 @@ class ContactsArrayAdapter extends ArrayAdapter<ContactsData> {
         TextView tvName = convertView.findViewById(R.id.tvName);
         TextView tvDate = convertView.findViewById(R.id.tvCallDateTime);
         TextView tvPhone = convertView.findViewById(R.id.tvPhone);
+
+        ViewGroup.LayoutParams lp = convertView.getLayoutParams();
+        lp.height = (int)((fontsizeName + fontsizePhone) * 1.42);
+        convertView.setLayoutParams(lp);
+
+        tvName.setTextSize(fontsizeName);
+        tvDate.setTextSize(fontsizeDate);
+        tvPhone.setTextSize(fontsizePhone);
 
         tvName.setText(contactsData.getName());
 
