@@ -353,6 +353,11 @@ public class ContactActivity extends AppCompatActivity {
                 Uri contactUri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId);
                 intent.setData(contactUri);
                 startActivity(intent);
+            } else {
+                Intent intent = new Intent(Intent.ACTION_INSERT);
+                intent.setType(ContactsContract.Contacts.CONTENT_TYPE);
+                intent.putExtra(ContactsContract.Intents.Insert.PHONE, sPhone);
+                startActivity(intent);
             }
 
             //finishAffinity();
