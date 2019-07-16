@@ -167,13 +167,18 @@ public class ContactActivity extends AppCompatActivity {
 
         String orderBy = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC";
 
-        String mSelectionClause = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " GLOB '" + sFilter + "*'";
+        String mSelectionClause = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " GLOB '" + sFilter + "*'" +
+                " and " + ContactsContract.CommonDataKinds.Phone.HAS_PHONE_NUMBER;
 
         Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                 projection, mSelectionClause, null, orderBy);
-        assert cursor != null;
-        if (cursor.getCount() == 0)
+
+        if (cursor == null || cursor.getCount() == 0) {
+            if (sFilter.length() > 1)
+                removeLastFilter();
+            setTitle(sCaption);
             return;
+        }
 
         int idxName = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
         int idxDate = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.LAST_TIME_CONTACTED);
@@ -229,9 +234,6 @@ public class ContactActivity extends AppCompatActivity {
 
     private void removeLastFilter() {
         int iBracket = sFilter.lastIndexOf('[');
-        int iOne = sFilter.lastIndexOf('1');
-        if ((iOne > -1) && (iBracket > iOne))
-            iBracket = iOne;
         if (iBracket == -1)
             iBracket = 1;
         sFilter = sFilter.substring(0, iBracket);
@@ -284,7 +286,7 @@ public class ContactActivity extends AppCompatActivity {
         private Boolean updateFilterFromKeyCode(int keyCode) {
             switch (keyCode) {
                 case KeyEvent.KEYCODE_1:
-                    sFilter = sFilter + "1";
+                    sFilter = sFilter + "[1 ]";
                     sCaption = sCaption + "1";
                     break;
                 case KeyEvent.KEYCODE_2:
