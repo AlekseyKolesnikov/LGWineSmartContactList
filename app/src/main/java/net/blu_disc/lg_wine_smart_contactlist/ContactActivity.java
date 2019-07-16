@@ -137,9 +137,11 @@ public class ContactActivity extends AppCompatActivity {
         cal.add(Calendar.MONTH, -1);
         String[] mSelectionArgs = { "" + cal.getTimeInMillis() };
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) !=
+                PackageManager.PERMISSION_GRANTED)
             return;
-        Cursor cursor = getContentResolver().query(CallLog.Calls.CONTENT_URI, projection, mSelectionClause, mSelectionArgs, orderBy);
+        Cursor cursor = getContentResolver().query(CallLog.Calls.CONTENT_URI, projection, mSelectionClause,
+                mSelectionArgs, orderBy);
         assert cursor != null;
         if (cursor.getCount() == 0)
             return;
@@ -167,7 +169,8 @@ public class ContactActivity extends AppCompatActivity {
 
         String mSelectionClause = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " GLOB '" + sFilter + "*'";
 
-        Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, projection, mSelectionClause, null, orderBy);
+        Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                projection, mSelectionClause, null, orderBy);
         assert cursor != null;
         if (cursor.getCount() == 0)
             return;
@@ -205,6 +208,10 @@ public class ContactActivity extends AppCompatActivity {
             if (!found) {
                 uniNumbers.add(sNumber);
                 sNumber = cursor.getString(idxNumber);
+                if (sNumber == null)
+                    sNumber = cursor.getString(idxUniNumber);
+                if (sNumber == null)
+                    sNumber = "";
 
                 String sName = cursor.getString(idxName);
                 if (sName == null || sName.length() == 0)
@@ -215,7 +222,8 @@ public class ContactActivity extends AppCompatActivity {
             }
         } while (cursor.moveToNext());
 
-        ListAdapter adapter = new ContactsArrayAdapter(this, R.layout.item, arrayLog, fontsizeName, fontsizeDate, fontsizePhone);
+        ListAdapter adapter = new ContactsArrayAdapter(this, R.layout.item, arrayLog,
+                fontsizeName, fontsizeDate, fontsizePhone);
         listContacts.setAdapter(adapter);
     }
 
@@ -235,12 +243,24 @@ public class ContactActivity extends AppCompatActivity {
         final int KEY_DELETE = 174;
 
         public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
-            if (keyCode == KeyEvent.KEYCODE_DEL)
-                return true;
-
             //int eventKeyCode = keyEvent.getKeyCode();
             int keyAction = keyEvent.getAction();
             int scanCode = keyEvent.getScanCode();
+
+            if (keyAction == KeyEvent.ACTION_DOWN) {
+                Boolean needReload = updateFilterFromKeyCode(keyCode);
+
+                if (scanCode == KEY_DELETE || keyCode == KeyEvent.KEYCODE_DEL) {
+                    if (sFilter.length() > 1)
+                        removeLastFilter();
+                    needReload = true;
+                }
+
+                if (needReload) {
+                    reloadData();
+                    return true;
+                }
+            }
 
             if (keyAction == KeyEvent.ACTION_UP) {
                 if (keyCode == KeyEvent.KEYCODE_CALL) {
@@ -255,20 +275,7 @@ public class ContactActivity extends AppCompatActivity {
                         return true;
                     }
                 } else
-                    return (scanCode == KEY_DELETE);
-            }
-
-            Boolean needReload = updateFilterFromKeyCode(keyCode);
-
-            if (scanCode == KEY_DELETE) {
-                if (sFilter.length() > 1)
-                    removeLastFilter();
-                needReload = true;
-            }
-
-            if (needReload) {
-                reloadData();
-                return true;
+                    return (scanCode == KEY_DELETE || keyCode == KeyEvent.KEYCODE_DEL);
             }
 
             return false;

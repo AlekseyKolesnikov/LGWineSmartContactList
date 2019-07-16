@@ -1,9 +1,11 @@
 package net.blu_disc.lg_wine_smart_contactlist;
 
 import android.app.Activity;
+import android.content.Context;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -15,19 +17,43 @@ import java.util.List;
 import java.util.Locale;
 
 class ContactsArrayAdapter extends ArrayAdapter<ContactsData> {
-    private Activity activity = null;
-    private float fontsizeName = 22;
-    private float fontsizeDate = 14;
-    private float fontsizePhone = 16;
+    private Activity activity;
+    private float fontSizeName;
+    private float fontSizeDate;
+    private float fontSizePhone;
 
     ContactsArrayAdapter(@NonNull Activity activity, @LayoutRes int resource, @NonNull List<ContactsData> objects,
                          float fsName, float fsDate, float fsPhone) {
         super(activity, resource, objects);
         this.activity = activity;
-        this.fontsizeName = fsName;
-        this.fontsizeDate = fsDate;
-        this.fontsizePhone = fsPhone;
+        this.fontSizeName = fsName;
+        this.fontSizeDate = fsDate;
+        this.fontSizePhone = fsPhone;
     }
+
+
+    /**
+     * This method converts dp unit to equivalent pixels, depending on device density.
+     *
+     * @param dp A value in dp (density independent pixels) unit. Which we need to convert into pixels
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent px equivalent to dp depending on device density
+     */
+    private static float convertDpToPixel(float dp, Context context){
+        return dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+    }
+
+    /**
+     * This method converts device specific pixels to density independent pixels.
+     *
+     * @param px A value in px (pixels) unit. Which we need to convert into db
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent dp equivalent to px value
+     */
+    private static float convertPixelsToDp(float px, Context context){
+        return px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+    }
+
 
     @NonNull
     @Override
@@ -46,18 +72,18 @@ class ContactsArrayAdapter extends ArrayAdapter<ContactsData> {
         TextView tvPhone = convertView.findViewById(R.id.tvPhone);
 
         ViewGroup.LayoutParams lp = convertView.getLayoutParams();
-        lp.height = (int)((fontsizeName + fontsizePhone) * 1.42);
+        lp.height = Math.round(convertDpToPixel((float)((fontSizeName + fontSizePhone) * 1.42), activity));
         convertView.setLayoutParams(lp);
 
-        tvName.setTextSize(fontsizeName);
-        tvDate.setTextSize(fontsizeDate);
-        tvPhone.setTextSize(fontsizePhone);
+        tvName.setTextSize(fontSizeName);
+        tvDate.setTextSize(fontSizeDate);
+        tvPhone.setTextSize(fontSizePhone);
 
         tvName.setText(contactsData.getName());
 
-        Date d = new Date(contactsData.getDate());
+        Date aDate = new Date(contactsData.getDate());
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd MMM HH:mm", Locale.getDefault());
-        tvDate.setText(simpleDateFormat.format(d));
+        tvDate.setText(simpleDateFormat.format(aDate));
 
         tvPhone.setText(contactsData.getNumber());
 
