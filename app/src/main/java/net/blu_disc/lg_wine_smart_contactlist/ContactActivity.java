@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CallLog;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -48,9 +49,15 @@ public class ContactActivity extends AppCompatActivity {
         loadOptions();
 
         listContacts = findViewById(R.id.conactlist);
-        loadContactsFromLog();
+        //loadContactsFromLog();
 
         listContacts.setOnKeyListener(new ContactsViewKeyListener());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        reloadData();
     }
 
     private void loadOptions() {
@@ -94,7 +101,7 @@ public class ContactActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         Intent intent = new Intent(this, SettingsActivity.class);
         intent.putExtra(strFSName, fontsizeName);
         intent.putExtra(strFSDate, fontsizeDate);
