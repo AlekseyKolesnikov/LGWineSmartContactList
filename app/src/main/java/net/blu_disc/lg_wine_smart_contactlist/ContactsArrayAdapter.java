@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.Locale;
 
 class ContactsArrayAdapter extends ArrayAdapter<ContactsData> {
-    private Activity activity;
-    private float fontSizeName;
-    private float fontSizeDate;
-    private float fontSizePhone;
+    private final Activity activity;
+    private final float fontSizeName;
+    private final float fontSizeDate;
+    private final float fontSizePhone;
 
     ContactsArrayAdapter(@NonNull Activity activity, @LayoutRes int resource, @NonNull List<ContactsData> objects,
                          float fsName, float fsDate, float fsPhone) {
@@ -43,16 +43,16 @@ class ContactsArrayAdapter extends ArrayAdapter<ContactsData> {
         return dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
     }
 
-    /**
-     * This method converts device specific pixels to density independent pixels.
-     *
-     * @param px A value in px (pixels) unit. Which we need to convert into db
-     * @param context Context to get resources and device specific display metrics
-     * @return A float value to represent dp equivalent to px value
-     */
-    private static float convertPixelsToDp(float px, Context context){
-        return px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
-    }
+//    /**
+//     * This method converts device specific pixels to density independent pixels.
+//     *
+//     * @param px A value in px (pixels) unit. Which we need to convert into db
+//     * @param context Context to get resources and device specific display metrics
+//     * @return A float value to represent dp equivalent to px value
+//     */
+//    private static float convertPixelsToDp(float px, Context context){
+//        return px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+//    }
 
 
     @NonNull

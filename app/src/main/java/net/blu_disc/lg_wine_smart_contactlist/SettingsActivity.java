@@ -1,17 +1,25 @@
 package net.blu_disc.lg_wine_smart_contactlist;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.EditText;
 
 public class SettingsActivity extends AppCompatActivity {
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+        getWindow().setLayout((dm.widthPixels), (int)(dm.heightPixels * 0.65));
 
         EditText edNameFontSize = findViewById(R.id.edNameFontSize);
         EditText edDateFontSize = findViewById(R.id.edDateFontSize);

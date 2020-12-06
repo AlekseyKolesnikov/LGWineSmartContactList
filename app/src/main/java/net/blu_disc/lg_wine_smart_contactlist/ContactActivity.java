@@ -24,6 +24,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Objects;
 
 public class ContactActivity extends AppCompatActivity {
     public final static String strFSName = "fontsizeName";
@@ -62,9 +63,9 @@ public class ContactActivity extends AppCompatActivity {
 
     private void loadOptions() {
         SharedPreferences sPref = getPreferences(MODE_PRIVATE);
-        fontsizeName = Float.valueOf(sPref.getString(strFSName, Integer.toString(iFSName)));
-        fontsizeDate = Float.valueOf(sPref.getString(strFSDate, Integer.toString(iFSDate)));
-        fontsizePhone = Float.valueOf(sPref.getString(strFSPhone, Integer.toString(iFSPhone)));
+        fontsizeName = Float.parseFloat(sPref.getString(strFSName, Integer.toString(iFSName)));
+        fontsizeDate = Float.parseFloat(sPref.getString(strFSDate, Integer.toString(iFSDate)));
+        fontsizePhone = Float.parseFloat(sPref.getString(strFSPhone, Integer.toString(iFSPhone)));
     }
 
     private void saveOptions() {
@@ -91,9 +92,9 @@ public class ContactActivity extends AppCompatActivity {
     protected void onActivityResult (int requestCode, int resultCode, Intent data) {
         if (resultCode != RESULT_OK) return;
 
-        fontsizeName = checkFontSize(Float.valueOf(data.getStringExtra(strFSName)));
-        fontsizeDate = checkFontSize(Float.valueOf(data.getStringExtra(strFSDate)));
-        fontsizePhone = checkFontSize(Float.valueOf(data.getStringExtra(strFSPhone)));
+        fontsizeName = checkFontSize(Float.parseFloat(Objects.requireNonNull(data.getStringExtra(strFSName))));
+        fontsizeDate = checkFontSize(Float.parseFloat(Objects.requireNonNull(data.getStringExtra(strFSDate))));
+        fontsizePhone = checkFontSize(Float.parseFloat(Objects.requireNonNull(data.getStringExtra(strFSPhone))));
 
         saveOptions();
 
@@ -112,6 +113,8 @@ public class ContactActivity extends AppCompatActivity {
     }
 
     private void reloadData() {
+        int position = listContacts.getSelectedItemPosition();
+
         if (sFilter.length() > 1)
             loadContactsFromContacts();
         else
@@ -124,6 +127,10 @@ public class ContactActivity extends AppCompatActivity {
             else
                 loadContactsFromLog();
         }
+
+        if (position < 0) position = 0;
+        listContacts.setSelection(position);
+        listContacts.smoothScrollToPosition(position);
     }
 
     private void loadContactsFromLog() {
@@ -257,7 +264,7 @@ public class ContactActivity extends AppCompatActivity {
             int scanCode = keyEvent.getScanCode();
 
             if (keyAction == KeyEvent.ACTION_DOWN) {
-                Boolean needReload = updateFilterFromKeyCode(keyCode);
+                boolean needReload = updateFilterFromKeyCode(keyCode);
 
                 if (scanCode == KEY_DELETE || keyCode == KeyEvent.KEYCODE_DEL) {
                     if (sFilter.length() > 1)
@@ -283,6 +290,19 @@ public class ContactActivity extends AppCompatActivity {
                         openContact();
                         return true;
                     }
+                } else
+                if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                    Intent intent = new Intent(Intent.ACTION_INSERT);
+                    intent.setType(ContactsContract.Contacts.CONTENT_TYPE);
+                    startActivity(intent);
+                    return true;
+                } else
+                if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                    //intent.setData(Uri.parse("tel:+7"));
+                    //intent.putExtra("content", "+7");
+                    startActivity(intent);
+                    return true;
                 } else
                     return (scanCode == KEY_DELETE || keyCode == KeyEvent.KEYCODE_DEL);
             }
@@ -364,17 +384,17 @@ public class ContactActivity extends AppCompatActivity {
                 cursor.close();
             }
 
+            Intent intent;
             if (contactId > -1) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent = new Intent(Intent.ACTION_VIEW);
                 Uri contactUri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId);
                 intent.setData(contactUri);
-                startActivity(intent);
             } else {
-                Intent intent = new Intent(Intent.ACTION_INSERT);
+                intent = new Intent(Intent.ACTION_INSERT);
                 intent.setType(ContactsContract.Contacts.CONTENT_TYPE);
                 intent.putExtra(ContactsContract.Intents.Insert.PHONE, sPhone);
-                startActivity(intent);
             }
+            startActivity(intent);
 
             //finishAffinity();
         }
